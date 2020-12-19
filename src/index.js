@@ -2,7 +2,8 @@ const express = require('express')
 const http = require('http')
 const path = require('path')
 const socketio = require('socket.io') 
-
+const { generateMsg } = require('./utils/messages.js') 
+const { addUser, removeUser, getUser, getUsersInRoom } = require('./utils/users.js')
 
 const app = express()                //new express application
 const server = http.createServer(app) //w make server just to pass is to socket.io   
@@ -12,21 +13,38 @@ const io = socketio(server)
 const  publicDirectoryPath = path.join(__dirname , '../public')
 
 app.use(express.static(publicDirectoryPath))
-
-let count = 0
-
+ 
 io.on('connection',(socket) => {
     console.log('New connection')
     
-    socket.emit('message',"Welcome!")
-    socket.broadcast.emit('message','A new user has joined!') //send to all except that user
-    
-    socket.on('sendMessage',(message)=>{
-        console.log(message)
-        io.emit('message',message) //emit to all
+    socket.on('join', ({ userName, room }, callback) => {
+        
+        const { error, user } = addUser({ id: socket.id ,userName, room })
+        
+        if(error){
+            return callback(error)         
+        }
+        
+        socket.join(user.room)
+
+        socket.emit('message',generateMsg('Admin',"Welcome!"))
+        socket.broadcast.to(user.room).emit('message',generateMsg("Admin",`${user.userName} has joined!`)) //send to all except that user in that room
+        
+        callback() 
     })
+
+    socket.on('sendMessage',(message,callback)=>{
+        const user = getUser(socket.id)
+        io.to(user.room).emit('message',generateMsg(user.userName,message)) //emit to all
+         callback()
+    })
+    
     socket.on('disconnect',()=>{
-        io.emit('message','A user has left')
+        const user = removeUser(socket.id)
+        
+        if(user){
+            io.to(user.room).emit('message', generateMsg(user.userName,`${user.userName} has left`))
+        }
     })
 })
 
