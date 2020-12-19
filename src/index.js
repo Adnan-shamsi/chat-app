@@ -29,14 +29,21 @@ io.on('connection',(socket) => {
 
         socket.emit('message',generateMsg('Admin',"Welcome!"))
         socket.broadcast.to(user.room).emit('message',generateMsg("Admin",`${user.userName} has joined!`)) //send to all except that user in that room
+        io.to(user.room).emit('roomData',{
+            room:user.room,
+            users: getUsersInRoom(user.room)
+        })
         
         callback() 
     })
 
     socket.on('sendMessage',(message,callback)=>{
         const user = getUser(socket.id)
+        if(!user){
+            callback("no user defined")
+        }
         io.to(user.room).emit('message',generateMsg(user.userName,message)) //emit to all
-         callback()
+        callback()
     })
     
     socket.on('disconnect',()=>{
@@ -44,6 +51,10 @@ io.on('connection',(socket) => {
         
         if(user){
             io.to(user.room).emit('message', generateMsg(user.userName,`${user.userName} has left`))
+            io.to(user.room).emit('roomData',{
+                room:user.room,
+                users: getUsersInRoom(user.room)
+            })
         }
     })
 })
