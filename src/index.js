@@ -6,17 +6,22 @@ const { generateMsg } = require('./utils/messages.js')
 const { addUser, removeUser, getUser, getUsersInRoom } = require('./utils/users.js')
 
 const app = express()                //new express application
-const server = http.createServer(app) //w make server just to pass is to socket.io   
+const server = http.createServer(app) //we make server just to pass is to socket.io   
 const port = process.env.PORT || 3000 
 const io = socketio(server)
 
 const  publicDirectoryPath = path.join(__dirname , '../public')
 
+///setting up public directory
 app.use(express.static(publicDirectoryPath))
  
+
+//////////////////////// CONNECTION ///////////////////////////////////////////////
 io.on('connection',(socket) => {
+
     console.log('New connection')
     
+    //////  join ///////////
     socket.on('join', ({ userName, room }, callback) => {
         
         const { error, user } = addUser({ id: socket.id ,userName, room })
@@ -25,6 +30,7 @@ io.on('connection',(socket) => {
             return callback(error)         
         }
         
+        //joining room
         socket.join(user.room)
 
         socket.emit('message',generateMsg('Admin',"Welcome!"))
@@ -34,10 +40,13 @@ io.on('connection',(socket) => {
             users: getUsersInRoom(user.room)
         })
         
+        //callback without error means sucessful acknowledgement
         callback() 
     })
-
-    socket.on('sendMessage',(message,callback)=>{
+    
+    ////sending message to others in room //////
+    
+    socket.on('sendMessage',(message,callback) => {
         const user = getUser(socket.id)
         if(!user){
             callback("no user defined")
@@ -46,6 +55,8 @@ io.on('connection',(socket) => {
         callback()
     })
     
+
+    ///////// disconnection ///////////// 
     socket.on('disconnect',()=>{
         const user = removeUser(socket.id)
         

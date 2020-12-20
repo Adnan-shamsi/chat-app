@@ -1,5 +1,6 @@
 //since we have already added socket js in index.html
 //now we can use io that is in socket.io.js
+
 const  socket = io()        
 
 //DOM Elements
@@ -14,6 +15,9 @@ const sidebarTemplate = document.querySelector('#sidebar-template').innerHTML
 
 //Options 
 const { userName , room } =  Qs.parse(location.search,{ignoreQueryPrefix: true})
+
+
+//////////////////////auto scroll /////////////////////////////////////////////
 
 const autoscroll = () => {
   //New message element 
@@ -39,6 +43,9 @@ const autoscroll = () => {
   }
 }
 
+
+///////// Message Rendering by mustache /////////////////////////////////////////////
+
 socket.on('message',(message) => {
     
     //setting ids for me others, and , 'Admin'
@@ -57,12 +64,11 @@ socket.on('message',(message) => {
     })
     
     $messages.insertAdjacentHTML('beforeend',html) // new message just at bottom
-    
-    
-    
+        
     autoscroll()
 })
 
+////////////// room DATA sidebar rendering /////////////////////////////////////
 socket.on('roomData',({ room, users }) => {
     const html = Mustache.render(sidebarTemplate, {
         room,
@@ -71,26 +77,8 @@ socket.on('roomData',({ room, users }) => {
     document.querySelector('#sidebar').innerHTML = html    
 })
 
-$messageForm.addEventListener('submit',(e) => {
-    e.preventDefault() //prevent from relaoding
-    
-    //disabling button
-    $messageFormButton.setAttribute('disabled','disabled')
-    
-    const message = e.target.elements.message.value //targeting form value whose name is message
 
-    socket.emit('sendMessage', message , (error) => {
-        //enabling button
-        $messageFormButton.removeAttribute('disabled')
-        $messageFormInput.value = ''        
-        $messageFormInput.focus()
-        if(error){
-            return console.log(error);
-        }
-        console.log('Message Dilevered')
-    })
- 
-})
+//////////// join ///////////////////////////////////////////////////////////////
 
 socket.emit('join',{ userName , room },(error) => {
    if(error)
@@ -98,4 +86,35 @@ socket.emit('join',{ userName , room },(error) => {
        alert(error)
        location.href = '/'
    }
+})
+
+
+//////////////////////////////////// FORM MANIPULATION ////////////////////////////
+
+$messageForm.addEventListener('submit',(e) => {
+    e.preventDefault() //prevent from relaoding
+    
+    //disabling button
+    $messageFormButton.setAttribute('disabled','disabled')
+    
+    const message = e.target.elements.message.value //targeting form value whose name is message
+    
+    const mainMsgDiv = document.querySelector('.emojionearea-editor')
+    console.log(mainMsgDiv.innerText)
+    
+    mainMsgDiv.innerText = "" 
+    mainMsgDiv.setAttribute('tabindex',0)
+    mainMsgDiv.focus();
+
+    socket.emit('sendMessage', message , (error) => {
+        //enabling button
+        $messageFormButton.removeAttribute('disabled')
+        $messageFormInput.value = ''        
+        //$messageFormInput.focus()
+        if(error){
+            return console.log(error);
+        }
+        console.log('Message Dilevered')
+    })
+ 
 })
