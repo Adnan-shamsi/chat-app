@@ -40,12 +40,26 @@ const autoscroll = () => {
 }
 
 socket.on('message',(message) => {
+    
+    //setting ids for me others, and , 'Admin'
+    idName = 'other'
+    
+    if(message.userName === userName)
+        idName= "me"
+    else if(message.userName === 'Admin')
+        idName = "Admin"     
+
     const html = Mustache.render(messageTemplate,{
         userName:message.userName,
         message: message.text,
-        createdAt: moment(message.createdAt).format('h:mm a')
+        createdAt: moment(message.createdAt).format('h:mm a'),
+        idName
     })
+    
     $messages.insertAdjacentHTML('beforeend',html) // new message just at bottom
+    
+    
+    
     autoscroll()
 })
 

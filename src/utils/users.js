@@ -11,6 +11,12 @@ const addUser = ({ id, userName, room }) => {
           error: 'Username and room are required!'
       }
   }
+  
+  if(userName === 'admin') {
+    return {
+        error: 'Admin is not a valid Username!'
+    }
+}
 
   const existingUser = users.find( (user) => {
       return user.room === room && user.userName === userName

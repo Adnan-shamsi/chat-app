@@ -3,7 +3,7 @@
     <head>
         <title>Chat App</title>
         <link rel="icon" href="/img/favicon.png">
-        <link rel="stylesheet" href="/css/styles.min.css">
+        <link rel="stylesheet" href="/css/styles.css">
     </head>
     
     
@@ -31,7 +31,7 @@
 
 <!--script for rendering data by mustache-->
 <script id='message-template' type='text/html'>
-<div class='message'> 
+<div class='message' id={{idName}}> 
     <p>
         <span class='message__name'>{{userName}}</span>
         <span class='message__meta'> {{createdAt}}</span>
